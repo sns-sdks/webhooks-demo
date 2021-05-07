@@ -3,13 +3,7 @@
 """
 from typing import List
 
-from pydantic import BaseModel, Field
-
-
-class ChallengeForm(BaseModel):
-    hub_mode: str = Field(None, alias="hub.mode")
-    hub_verify_token: str = Field(None, alias="hub.verify_token")
-    hub_challenge: str = Field(None, alias="hub.challenge")
+from pydantic import BaseModel
 
 
 class Change(BaseModel):

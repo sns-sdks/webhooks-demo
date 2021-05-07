@@ -2,24 +2,28 @@
     Webhook for facebook.
 """
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Query, Response
 
 import config
-from app.entities.facebook import ChallengeForm, Payload
+from app.entities.facebook import Payload
 
 fb_router = APIRouter()
 
 
 @fb_router.get("/facebook")
-async def verify_challenge(form: ChallengeForm):
+async def verify_challenge(
+    mode: str = Query(None, alias="hub.mode"),
+    verify_token: str = Query(None, alias="hub.verify_token"),
+    challenge: str = Query(None, alias="hub.challenge"),
+):
     """
     :return:
     """
-    if not (form.hub_mode and form.hub_verify_token and form.hub_challenge):
+    if not (mode and verify_token and challenge):
         return Response("hello")
 
-    if form.hub_verify_token == config.FACEBOOK_VERIFY_TOKEN and form.hub_mode == "subscribe":
-        return Response(form.hub_challenge)
+    if verify_token == config.FACEBOOK_VERIFY_TOKEN and mode == "subscribe":
+        return Response(challenge)
     return Response("hello")
 
 
