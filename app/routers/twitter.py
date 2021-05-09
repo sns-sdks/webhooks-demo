@@ -8,6 +8,7 @@ import hmac
 from fastapi import APIRouter, Header, Request, Response
 
 import config
+from app.entities.twitter import Payload
 
 tw_router = APIRouter()
 
@@ -30,13 +31,15 @@ async def verify_challenge(crc_token: str):
 
 
 @tw_router.post("twitter")
-async def webhook_event(signature: Header(None, alias="x-twitter-webhooks-signature"), request: Request):
+async def webhook_event(signature: Header(None, alias="x-twitter-webhooks-signature"), request: Request, data: Payload):
     if config.SECURITY_CHECK:
-        verify_request(signature=signature, body=request.body)
+        vst = await verify_request(signature=signature, body=request.body)
+        print(f"Verify status: {vst}")
+    print(f"Event data:\n{data.dict()}")
     return Response("")
 
 
-def verify_request(signature, body):
+async def verify_request(signature, body):
     """
     :param signature:
     :param body:
