@@ -10,6 +10,7 @@ from fastapi import APIRouter, Header, Request, Response
 
 import config
 from app.entities.twitter import Payload
+from app.deps import tw_cli
 
 tw_router = APIRouter()
 
@@ -60,3 +61,46 @@ async def verify_request(signature, body):
     except Exception as err:
         print(f"Exception in verify request: {err}")
         return False
+
+
+# Manage Webhooks
+@tw_router.get("/twitter/hooks")
+async def list_webhooks(response: Response):
+    """
+    :param response:
+    :return:
+    """
+    resp = await tw_cli.get(url="https://api.twitter.com/1.1/account_activity/all/webhooks.json")
+    response.status_code = resp.status_code
+    return resp.json()
+
+
+@tw_router.get("/twitter/hook/challenge")
+async def trigger_challenge(env: str, webhook_id: str, response: Response):
+    """
+    :param env: app env name
+    :param webhook_id: ID for webhook.
+    :param response: Response
+    :return:
+    """
+    resp = await tw_cli.put(url=f"https://api.twitter.com/1.1/account_activity/all/{env}/webhooks/{webhook_id}.json")
+    response.status_code = resp.status_code
+    return resp.json()
+
+
+@tw_router.post("/twitter/hook/register")
+async def register_webhook(env: str, url: str, response: Response):
+    """
+    :param env:
+    :param url:
+    :param response:
+    :return:
+    """
+    resp = await tw_cli.post(
+        url=f"https://api.twitter.com/1.1/account_activity/all/{env}/webhooks.json",
+        params={
+            "url": url,
+        }
+    )
+    response.status_code = resp.status_code
+    return resp.json()
