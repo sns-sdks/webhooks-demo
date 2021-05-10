@@ -4,6 +4,7 @@
 import base64
 import hashlib
 import hmac
+from typing import Optional
 
 from fastapi import APIRouter, Header, Request, Response
 
@@ -31,7 +32,10 @@ async def verify_challenge(crc_token: str):
 
 
 @tw_router.post("twitter")
-async def webhook_event(signature: Header(None, alias="x-twitter-webhooks-signature"), request: Request, data: Payload):
+async def webhook_event(
+        data: Payload, request: Request,
+        signature: Optional[str] = Header(None, alias='x-twitter-webhooks-signature')
+):
     if config.SECURITY_CHECK:
         vst = await verify_request(signature=signature, body=request.body)
         print(f"Verify status: {vst}")
