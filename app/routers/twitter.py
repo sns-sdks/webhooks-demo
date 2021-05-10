@@ -14,6 +14,8 @@ from app.deps import tw_cli
 
 tw_router = APIRouter()
 
+TWITTER_BASE_URL = "https://api.twitter.com/1.1/account_activity"
+
 
 @tw_router.get("/twitter")
 async def verify_challenge(crc_token: str):
@@ -21,11 +23,11 @@ async def verify_challenge(crc_token: str):
     :param crc_token:
     :return:
     """
-    sha256_hash_digest = hmac.digest(
+    sha256_hash_digest = hmac.new(
         key=config.TWITTER_CONSUMER_SECRET.encode(),
         msg=crc_token.encode(),
-        digest=hashlib.sha256,
-    )
+        digestmod=hashlib.sha256,
+    ).digest()
 
     return {"response_token": f"sha256={base64.b64encode(sha256_hash_digest).decode()}"}
 
@@ -70,7 +72,7 @@ async def list_webhooks(response: Response):
     :return:
     """
     resp = await tw_cli.get(
-        url="https://api.twitter.com/1.1/account_activity/all/webhooks.json"
+        url=f"{TWITTER_BASE_URL}/all/webhooks.json"
     )
     response.status_code = resp.status_code
     return resp.json()
@@ -85,7 +87,7 @@ async def trigger_challenge(env: str, webhook_id: str, response: Response):
     :return:
     """
     resp = await tw_cli.put(
-        url=f"https://api.twitter.com/1.1/account_activity/all/{env}/webhooks/{webhook_id}.json"
+        url=f"{TWITTER_BASE_URL}/all/{env}/webhooks/{webhook_id}.json"
     )
     response.status_code = resp.status_code
     return resp.json()
@@ -99,7 +101,7 @@ async def register_webhook(body: RegisterWebhookItem, response: Response):
     :return:
     """
     resp = await tw_cli.post(
-        url=f"https://api.twitter.com/1.1/account_activity/all/{body.env}/webhooks.json",
+        url=f"{TWITTER_BASE_URL}/all/{body.env}/webhooks.json",
         params={"url": body.url},
     )
     response.status_code = resp.status_code
@@ -115,7 +117,7 @@ async def delete_webhook(env: str, webhook_id: str, response: Response):
     :return:
     """
     resp = await tw_cli.delete(
-        url=f"https://api.twitter.com/1.1/account_activity/all/{env}/webhooks/{webhook_id}.json"
+        url=f"{TWITTER_BASE_URL}/all/{env}/webhooks/{webhook_id}.json"
     )
     response.status_code = resp.status_code
     return resp.json()
