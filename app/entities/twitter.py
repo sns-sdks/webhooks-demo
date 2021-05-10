@@ -3,6 +3,7 @@
 """
 from typing import Optional
 
+from fastapi import Response
 from pydantic import BaseModel
 
 
@@ -22,3 +23,9 @@ class Payload(BaseModel):
     direct_message_indicate_typing_events: Optional[dict] = None
     direct_message_mark_read_events: Optional[dict] = None
     tweet_delete_events: Optional[dict] = None
+
+
+class RegisterWebhookItem(BaseModel):
+    env: str
+    url: str
+    response: Response
