@@ -5,7 +5,7 @@ import base64
 import hashlib
 import hmac
 from typing import Optional
-from urllib.parse import quote
+from urllib.parse import quote_plus
 
 from fastapi import APIRouter, Header, Request, Response
 
@@ -31,7 +31,7 @@ async def verify_challenge(crc_token: str):
     return {"response_token": f"sha256={base64.b64encode(sha256_hash_digest).decode()}"}
 
 
-@tw_router.post("twitter")
+@tw_router.post("/twitter")
 async def webhook_event(
     data: Payload,
     request: Request,
@@ -101,7 +101,7 @@ async def register_webhook(body: RegisterWebhookItem, response: Response):
     """
     resp = await tw_cli.post(
         url=f"https://api.twitter.com/1.1/account_activity/all/{body.env}/webhooks.json",
-        params={"url": quote(body.url)},
+        params={"url": quote_plus(body.url)},
     )
     response.status_code = resp.status_code
     return resp.json()
