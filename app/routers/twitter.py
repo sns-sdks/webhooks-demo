@@ -32,9 +32,9 @@ async def verify_challenge(crc_token: str):
 
 @tw_router.post("twitter")
 async def webhook_event(
-    data: Payload,
-    request: Request,
-    signature: Optional[str] = Header(None, alias="x-twitter-webhooks-signature"),
+        data: Payload,
+        request: Request,
+        signature: Optional[str] = Header(None, alias="x-twitter-webhooks-signature"),
 ):
     if config.SECURITY_CHECK:
         vst = await verify_request(signature=signature, body=request.body)
@@ -92,14 +92,15 @@ async def trigger_challenge(env: str, webhook_id: str, response: Response):
 
 
 @tw_router.post("/twitter/hook/register")
-async def register_webhook(body: RegisterWebhookItem):
+async def register_webhook(body: RegisterWebhookItem, response: Response):
     """
     :param body:
+    :param response:
     :return:
     """
     resp = await tw_cli.post(
         url=f"https://api.twitter.com/1.1/account_activity/all/{body.env}/webhooks.json",
         params={"url": body.url},
     )
-    body.response.status_code = resp.status_code
+    response.status_code = resp.status_code
     return resp.json()

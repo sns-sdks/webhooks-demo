@@ -28,4 +28,3 @@ class Payload(BaseModel):
 class RegisterWebhookItem(BaseModel):
     env: str
     url: str
-    response: Response
