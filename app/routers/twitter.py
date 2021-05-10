@@ -22,11 +22,11 @@ async def verify_challenge(crc_token: str):
     :param crc_token:
     :return:
     """
-    sha256_hash_digest = hmac.new(
-        key=bytes(config.TWITTER_CONSUMER_SECRET, "utf-8"),
-        msg=bytes(crc_token, "utf-8"),
-        digestmod=hashlib.sha256,
-    ).digest()
+    sha256_hash_digest = hmac.digest(
+        key=config.TWITTER_CONSUMER_SECRET.encode(),
+        msg=crc_token.encode(),
+        digest=hashlib.sha256,
+    )
 
     return {"response_token": f"sha256={base64.b64encode(sha256_hash_digest).decode()}"}
 
