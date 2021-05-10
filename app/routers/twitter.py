@@ -5,6 +5,7 @@ import base64
 import hashlib
 import hmac
 from typing import Optional
+from urllib.parse import quote
 
 from fastapi import APIRouter, Header, Request, Response
 
@@ -32,9 +33,9 @@ async def verify_challenge(crc_token: str):
 
 @tw_router.post("twitter")
 async def webhook_event(
-        data: Payload,
-        request: Request,
-        signature: Optional[str] = Header(None, alias="x-twitter-webhooks-signature"),
+    data: Payload,
+    request: Request,
+    signature: Optional[str] = Header(None, alias="x-twitter-webhooks-signature"),
 ):
     if config.SECURITY_CHECK:
         vst = await verify_request(signature=signature, body=request.body)
@@ -100,7 +101,22 @@ async def register_webhook(body: RegisterWebhookItem, response: Response):
     """
     resp = await tw_cli.post(
         url=f"https://api.twitter.com/1.1/account_activity/all/{body.env}/webhooks.json",
-        params={"url": body.url},
+        params={"url": quote(body.url)},
+    )
+    response.status_code = resp.status_code
+    return resp.json()
+
+
+@tw_router.delete("/twitter/{env}/webhook/{webhook_id}")
+async def delete_webhook(env: str, webhook_id: str, response: Response):
+    """
+    :param env:
+    :param webhook_id:
+    :param response:
+    :return:
+    """
+    resp = await tw_cli.delete(
+        url=f"https://api.twitter.com/1.1/account_activity/all/{env}/webhooks/{webhook_id}.json"
     )
     response.status_code = resp.status_code
     return resp.json()
