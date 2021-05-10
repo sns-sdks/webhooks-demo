@@ -5,7 +5,6 @@ import base64
 import hashlib
 import hmac
 from typing import Optional
-from urllib.parse import quote_plus
 
 from fastapi import APIRouter, Header, Request, Response
 
@@ -101,7 +100,7 @@ async def register_webhook(body: RegisterWebhookItem, response: Response):
     """
     resp = await tw_cli.post(
         url=f"https://api.twitter.com/1.1/account_activity/all/{body.env}/webhooks.json",
-        params={"url": quote_plus(body.url)},
+        params={"url": body.url},
     )
     response.status_code = resp.status_code
     return resp.json()
