@@ -21,3 +21,9 @@ class PayloadEntry(BaseModel):
 class Payload(BaseModel):
     object: str
     entry: List[PayloadEntry]
+
+
+class SubscribeForm(BaseModel):
+    page_id: str
+    fields: str
+    access_token: str

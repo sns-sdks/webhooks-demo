@@ -5,7 +5,7 @@
 from fastapi import APIRouter, Query, Response
 
 import config
-from app.entities.facebook import Payload
+from app.entities.facebook import Payload, SubscribeForm
 from app.deps import fb_cli
 
 fb_router = APIRouter()
@@ -36,21 +36,20 @@ async def webhook_event(data: Payload):
 
 
 @fb_router.post("/facebook/subscribed_apps")
-async def subscribe_webhook(
-    page_id: str, fields: str, access_token: str, response: Response
-):
+async def subscribe_webhook(body: SubscribeForm, response: Response):
     """
-    :param page_id: id for your page
-    :param fields: fields to subscribe
-    :param access_token: your page access token
+    :param body:
+        - page_id: id for your page
+        - fields: fields to subscribe
+        - access_token: your page access token
     :param response:
     :return:
     """
     resp = await fb_cli.post(
-        url=f"{FACEBOOK_GRAPH_URL}/{page_id}/subscribed_apps",
+        url=f"{FACEBOOK_GRAPH_URL}/{body.page_id}/subscribed_apps",
         params={
-            "subscribed_fields": fields,
-            "access_token": access_token,
+            "subscribed_fields": body.fields,
+            "access_token": body.access_token,
         },
     )
     response.status_code = resp.status_code
