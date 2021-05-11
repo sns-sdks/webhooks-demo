@@ -55,3 +55,35 @@ async def test_subscribe_webhook():
         resp: Response = await ac.post("/facebook/subscribed_apps", json=body)
         assert resp.status_code == 200
         assert resp.json()["success"] == "true"
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_list_page_subscribed_apps():
+    page_id = "123456789"
+    apps_data = {
+        "data": [
+            {
+                "category": "tool",
+                "link": "https://example.com/",
+                "name": "name",
+                "id": "1800757089958236",
+                "subscribed_fields": ["feed", "videos"],
+            }
+        ]
+    }
+
+    respx.get(url=f"https://graph.facebook.com/{page_id}/subscribed_apps").mock(
+        return_value=Response(status_code=200, json=apps_data)
+    )
+
+    async with AsyncClient(app=app, base_url="https://test") as ac:
+        resp: Response = await ac.get(
+            url="/facebook/subscribed_apps",
+            params={
+                "page_id": page_id,
+                "access_token": "token",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"][0]["category"] == "tool"
