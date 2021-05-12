@@ -73,7 +73,7 @@ async def list_webhooks(response: Response):
     """
     Returns all webhooks for app
     """
-    resp = await tw_cli.get(url=f"{TWITTER_BASE_URL}/all/webhooks.json")
+    resp = await tw_cli.get(url=f"{TWITTER_BASE_URL}/webhooks.json")
     response.status_code = resp.status_code
     return resp.json()
 
