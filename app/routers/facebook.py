@@ -2,7 +2,7 @@
     Webhook for facebook.
 """
 
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Body, Query, Response
 
 import config
 from app.entities.facebook import Payload, SubscribeForm
@@ -14,12 +14,20 @@ FACEBOOK_GRAPH_URL = "https://graph.facebook.com"
 
 @fb_router.get("/facebook")
 async def verify_challenge(
-    mode: str = Query(None, alias="hub.mode"),
-    verify_token: str = Query(None, alias="hub.verify_token"),
-    challenge: str = Query(None, alias="hub.challenge"),
+    mode: str = Query(
+        ..., alias="hub.mode", description="Mode is always be `subscribe`"
+    ),
+    verify_token: str = Query(
+        ...,
+        alias="hub.verify_token",
+        description="Token which you set at app dashboard",
+    ),
+    challenge: str = Query(
+        ..., alias="hub.challenge", description="A random string return to facebook"
+    ),
 ):
     """
-    :return:
+    Verify challenge for webhook.
     """
     if not (mode and verify_token and challenge):
         return Response("hello")
@@ -30,7 +38,13 @@ async def verify_challenge(
 
 
 @fb_router.post("/facebook")
-async def webhook_event(data: Payload):
+async def webhook_event(
+    data: Payload = Body(..., description="Json data from facebook")
+):
+    """
+    Receive webhook push events, More see
+    https://developers.facebook.com/docs/graph-api/webhooks/getting-started#event-notifications
+    """
     print(f"Event data:\n{data.dict()}")
     return Response("ok")
 
@@ -38,12 +52,7 @@ async def webhook_event(data: Payload):
 @fb_router.post("/facebook/subscribed_apps")
 async def subscribe_webhook(body: SubscribeForm, response: Response):
     """
-    :param body:
-        - page_id: id for your page
-        - fields: fields to subscribe
-        - access_token: your page access token
-    :param response:
-    :return:
+    Subscribe your page to webhook
     """
     resp = await fb_cli.post(
         url=f"{FACEBOOK_GRAPH_URL}/{body.page_id}/subscribed_apps",
@@ -57,12 +66,13 @@ async def subscribe_webhook(body: SubscribeForm, response: Response):
 
 
 @fb_router.delete("/facebook/subscribed_apps")
-async def delete_subscribe_webhook(page_id: str, access_token: str, response: Response):
+async def delete_subscribe_webhook(
+    page_id: str = Query(..., description="ID for facebook page"),
+    access_token: str = Query(..., description="page access token"),
+    response: Response = None,
+):
     """
-    :param page_id: Id for your page
-    :param access_token: Your page access token
-    :param response: response for this api
-    :return:
+    Remove page from webhook subscription
     """
     resp = await fb_cli.delete(
         url=f"{FACEBOOK_GRAPH_URL}/{page_id}/subscribed_apps",
@@ -74,13 +84,12 @@ async def delete_subscribe_webhook(page_id: str, access_token: str, response: Re
 
 @fb_router.get("/facebook/subscribed_apps")
 async def list_page_subscribed_apps(
-    page_id: str, access_token: str, response: Response
+    page_id: str = Query(..., description="ID for facebook page"),
+    access_token: str = Query(..., description="page access token"),
+    response: Response = None,
 ):
     """
-    :param page_id:
-    :param access_token:
-    :param response:
-    :return:
+    list page have subscribed apps
     """
     resp = await fb_cli.get(
         url=f"{FACEBOOK_GRAPH_URL}/{page_id}/subscribed_apps",

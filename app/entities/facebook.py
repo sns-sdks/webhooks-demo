@@ -3,7 +3,7 @@
 """
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Change(BaseModel):
@@ -24,6 +24,6 @@ class Payload(BaseModel):
 
 
 class SubscribeForm(BaseModel):
-    page_id: str
-    fields: str
-    access_token: str
+    page_id: str = Field(..., description="ID for facebook page")
+    fields: str = Field(..., description="Fields you want to subscribe to")
+    access_token: str = Field(..., description="Page access token")
