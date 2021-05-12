@@ -3,7 +3,7 @@
 """
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Payload(BaseModel):
@@ -25,5 +25,5 @@ class Payload(BaseModel):
 
 
 class RegisterWebhookItem(BaseModel):
-    env: str
-    url: str
+    env: str = Field(..., description="dev environment name")
+    url: str = Field(..., description="URL for the callback endpoint.")

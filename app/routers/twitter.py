@@ -6,7 +6,7 @@ import hashlib
 import hmac
 from typing import Optional
 
-from fastapi import APIRouter, Header, Request, Response
+from fastapi import APIRouter, Header, Query, Request, Response
 
 import config
 from app.entities.twitter import Payload, RegisterWebhookItem
@@ -20,8 +20,7 @@ TWITTER_BASE_URL = "https://api.twitter.com/1.1/account_activity"
 @tw_router.get("/twitter")
 async def verify_challenge(crc_token: str):
     """
-    :param crc_token:
-    :return:
+    Verify challenge for twitter
     """
     sha256_hash_digest = hmac.new(
         key=config.TWITTER_CONSUMER_SECRET.encode(),
@@ -38,6 +37,10 @@ async def webhook_event(
     request: Request,
     signature: Optional[str] = Header(None, alias="x-twitter-webhooks-signature"),
 ):
+    """
+    Receive webhook push events, More see
+    https://developer.twitter.com/en/docs/twitter-api/enterprise/account-activity-api/guides/account-activity-data-objects
+    """
     if config.SECURITY_CHECK:
         vst = await verify_request(signature=signature, body=request.body)
         print(f"Verify status: {vst}")
@@ -45,11 +48,11 @@ async def webhook_event(
     return Response("")
 
 
-async def verify_request(signature, body):
+async def verify_request(signature: str, body):
     """
-    :param signature:
-    :param body:
-    :return:
+    :param signature: signature in headers
+    :param body: body for request
+    :return: bool
     """
     try:
         crc = base64.b64decode(signature[7:])  # strip out the first 7 characters
@@ -68,8 +71,7 @@ async def verify_request(signature, body):
 @tw_router.get("/twitter/hooks")
 async def list_webhooks(response: Response):
     """
-    :param response:
-    :return:
+    Returns all webhooks for app
     """
     resp = await tw_cli.get(url=f"{TWITTER_BASE_URL}/all/webhooks.json")
     response.status_code = resp.status_code
@@ -77,12 +79,13 @@ async def list_webhooks(response: Response):
 
 
 @tw_router.get("/twitter/hook/challenge")
-async def trigger_challenge(env: str, webhook_id: str, response: Response):
+async def trigger_challenge(
+    env: str = Query(..., description="dev environment name"),
+    webhook_id: str = Query(..., description="ID for webhook"),
+    response: Response = None,
+):
     """
-    :param env: app env name
-    :param webhook_id: ID for webhook.
-    :param response: Response
-    :return:
+    Manually trigger a CRC request.
     """
     resp = await tw_cli.put(
         url=f"{TWITTER_BASE_URL}/all/{env}/webhooks/{webhook_id}.json"
@@ -94,9 +97,7 @@ async def trigger_challenge(env: str, webhook_id: str, response: Response):
 @tw_router.post("/twitter/hook/register")
 async def register_webhook(body: RegisterWebhookItem, response: Response):
     """
-    :param body:
-    :param response:
-    :return:
+    Register new webhook
     """
     resp = await tw_cli.post(
         url=f"{TWITTER_BASE_URL}/all/{body.env}/webhooks.json",
@@ -107,12 +108,13 @@ async def register_webhook(body: RegisterWebhookItem, response: Response):
 
 
 @tw_router.delete("/twitter/{env}/webhook/{webhook_id}")
-async def delete_webhook(env: str, webhook_id: str, response: Response):
+async def delete_webhook(
+    env: str = Query(..., description="dev environment name"),
+    webhook_id: str = Query(..., description="ID for webhook"),
+    response: Response = None,
+):
     """
-    :param env:
-    :param webhook_id:
-    :param response:
-    :return:
+    Delete a webhook
     """
     resp = await tw_cli.delete(
         url=f"{TWITTER_BASE_URL}/all/{env}/webhooks/{webhook_id}.json"
