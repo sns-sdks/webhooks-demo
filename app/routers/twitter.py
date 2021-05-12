@@ -73,7 +73,7 @@ async def list_webhooks(response: Response):
     """
     Returns all webhooks for app
     """
-    resp = await tw_cli.get(url=f"{TWITTER_BASE_URL}/webhooks.json")
+    resp = await tw_cli.get(url=f"{TWITTER_BASE_URL}/all/webhooks.json")
     response.status_code = resp.status_code
     return resp.json()
 
@@ -91,7 +91,7 @@ async def trigger_challenge(
         url=f"{TWITTER_BASE_URL}/all/{env}/webhooks/{webhook_id}.json"
     )
     response.status_code = resp.status_code
-    return resp.json()
+    return {}
 
 
 @tw_router.post("/twitter/hook/register")
@@ -107,7 +107,7 @@ async def register_webhook(body: RegisterWebhookItem, response: Response):
     return resp.json()
 
 
-@tw_router.delete("/twitter/{env}/webhook/{webhook_id}")
+@tw_router.delete("/twitter/webhook")
 async def delete_webhook(
     env: str = Query(..., description="dev environment name"),
     webhook_id: str = Query(..., description="ID for webhook"),
@@ -120,4 +120,4 @@ async def delete_webhook(
         url=f"{TWITTER_BASE_URL}/all/{env}/webhooks/{webhook_id}.json"
     )
     response.status_code = resp.status_code
-    return resp.json()
+    return {}
