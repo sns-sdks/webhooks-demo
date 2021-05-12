@@ -15,7 +15,7 @@ async def test_verify_challenge(client):
         "hub.challenge": "1158201444",
     }
     async with client:
-        resp: Response = await client.get("/facebook", params=params)
+        resp: Response = await client.get("/webhook/facebook", params=params)
         assert resp.status_code == 200
         assert resp.text == "hello"
 
@@ -39,7 +39,7 @@ async def test_webhook_event(client):
     }
 
     async with client:
-        resp: Response = await client.post("/facebook", json=payload)
+        resp: Response = await client.post("/webhook/facebook", json=payload)
         assert resp.status_code == 200
         assert resp.text == "ok"
 
@@ -54,7 +54,7 @@ async def test_subscribe_webhook(client):
     )
 
     async with client:
-        resp: Response = await client.post("/facebook/subscribed_apps", json=body)
+        resp: Response = await client.post("/webhook/facebook/subscribed_apps", json=body)
         assert resp.status_code == 200
         assert resp.json()["success"] == "true"
 
@@ -69,7 +69,7 @@ async def test_delete_subscribe_webhook(client):
     )
 
     async with client:
-        resp: Response = await client.delete("/facebook/subscribed_apps", params=params)
+        resp: Response = await client.delete("/webhook/facebook/subscribed_apps", params=params)
         assert resp.status_code == 200
         assert resp.json()["success"] == "true"
 
@@ -96,7 +96,7 @@ async def test_list_page_subscribed_apps(client):
 
     async with client:
         resp: Response = await client.get(
-            url="/facebook/subscribed_apps",
+            url="/webhook/facebook/subscribed_apps",
             params={
                 "page_id": page_id,
                 "access_token": "token",

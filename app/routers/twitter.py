@@ -12,12 +12,12 @@ import config
 from app.entities.twitter import Payload, RegisterWebhookItem
 from app.deps import tw_cli
 
-tw_router = APIRouter()
+router = APIRouter()
 
 TWITTER_BASE_URL = "https://api.twitter.com/1.1/account_activity"
 
 
-@tw_router.get("/twitter")
+@router.get("/twitter")
 async def verify_challenge(crc_token: str):
     """
     Verify challenge for twitter
@@ -31,7 +31,7 @@ async def verify_challenge(crc_token: str):
     return {"response_token": f"sha256={base64.b64encode(sha256_hash_digest).decode()}"}
 
 
-@tw_router.post("/twitter")
+@router.post("/twitter")
 async def webhook_event(
     data: Payload,
     request: Request,
@@ -68,7 +68,7 @@ async def verify_request(signature: str, body):
 
 
 # Manage Webhooks
-@tw_router.get("/twitter/hooks")
+@router.get("/twitter/webhooks")
 async def list_webhooks(response: Response):
     """
     Returns all webhooks for app
@@ -78,7 +78,7 @@ async def list_webhooks(response: Response):
     return resp.json()
 
 
-@tw_router.get("/twitter/hook/challenge")
+@router.get("/twitter/webhook/challenge")
 async def trigger_challenge(
     env: str = Query(..., description="dev environment name"),
     webhook_id: str = Query(..., description="ID for webhook"),
@@ -94,7 +94,7 @@ async def trigger_challenge(
     return {}
 
 
-@tw_router.post("/twitter/hook/register")
+@router.post("/twitter/webhook")
 async def register_webhook(body: RegisterWebhookItem, response: Response):
     """
     Register new webhook
@@ -107,7 +107,7 @@ async def register_webhook(body: RegisterWebhookItem, response: Response):
     return resp.json()
 
 
-@tw_router.delete("/twitter/webhook")
+@router.delete("/twitter/webhook")
 async def delete_webhook(
     env: str = Query(..., description="dev environment name"),
     webhook_id: str = Query(..., description="ID for webhook"),

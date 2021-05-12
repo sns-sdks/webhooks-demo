@@ -10,11 +10,11 @@ from httpx import Response
 @pytest.mark.asyncio
 async def test_verify_challenge(client):
     async with client:
-        resp: Response = await client.get("/twitter", params={"crc_token": "token"})
+        resp: Response = await client.get("/webhook/twitter", params={"crc_token": "token"})
         assert resp.status_code == 200
         assert (
-                resp.json()["response_token"]
-                == "sha256=5LjCS431VjMzel8lfVzi3wz95Am3liDPzmmJdboAU0s="
+            resp.json()["response_token"]
+            == "sha256=5LjCS431VjMzel8lfVzi3wz95Am3liDPzmmJdboAU0s="
         )
 
 
@@ -33,7 +33,7 @@ async def test_webhook_event(client):
         ],
     }
     async with client:
-        resp: Response = await client.post("/twitter", json=tweet_delete_events)
+        resp: Response = await client.post("/webhook/twitter", json=tweet_delete_events)
         assert resp.status_code == 200
         assert resp.text == ""
 
@@ -54,7 +54,7 @@ async def test_list_webhooks(client):
     )
 
     async with client:
-        resp: Response = await client.get("/twitter/hooks")
+        resp: Response = await client.get("/webhook/twitter/webhooks")
         assert resp.status_code == 200
         assert resp.json()[0]["id"] == "1234567890"
 
@@ -64,12 +64,12 @@ async def test_list_webhooks(client):
 async def test_trigger_challenge(client):
     params = {"env": "env", "webhook_id": 1}
 
-    respx.put("https://api.twitter.com/1.1/account_activity/all/env/webhooks/1.json").mock(
-        return_value=Response(status_code=204)
-    )
+    respx.put(
+        "https://api.twitter.com/1.1/account_activity/all/env/webhooks/1.json"
+    ).mock(return_value=Response(status_code=204))
 
     async with client:
-        resp: Response = await client.get("/twitter/hook/challenge", params=params)
+        resp: Response = await client.get("/webhook/twitter/webhook/challenge", params=params)
         assert resp.status_code == 204
 
 
@@ -82,15 +82,15 @@ async def test_register_webhook(client):
         "id": "1234567890",
         "url": "https://example.com/webhook/twitter",
         "valid": True,
-        "created_at": "2016-06-02T23:54:02Z"
+        "created_at": "2016-06-02T23:54:02Z",
     }
 
-    respx.post("https://api.twitter.com/1.1/account_activity/all/env/webhooks.json").mock(
-        return_value=Response(status_code=200, json=webhook_data)
-    )
+    respx.post(
+        "https://api.twitter.com/1.1/account_activity/all/env/webhooks.json"
+    ).mock(return_value=Response(status_code=200, json=webhook_data))
 
     async with client:
-        resp: Response = await client.post("/twitter/hook/register", json=body)
+        resp: Response = await client.post("/webhook/twitter/webhook", json=body)
         assert resp.status_code == 200
         assert resp.json()["id"] == "1234567890"
 
@@ -100,10 +100,10 @@ async def test_register_webhook(client):
 async def test_delete_webhook(client):
     params = {"env": "env", "webhook_id": 1}
 
-    respx.delete("https://api.twitter.com/1.1/account_activity/all/env/webhooks/1.json").mock(
-        return_value=Response(status_code=204)
-    )
+    respx.delete(
+        "https://api.twitter.com/1.1/account_activity/all/env/webhooks/1.json"
+    ).mock(return_value=Response(status_code=204))
 
     async with client:
-        resp: Response = await client.delete("/twitter/webhook", params=params)
+        resp: Response = await client.delete("/webhook/twitter/webhook", params=params)
         assert resp.status_code == 204

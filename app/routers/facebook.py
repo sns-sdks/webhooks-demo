@@ -8,11 +8,11 @@ import config
 from app.entities.facebook import Payload, SubscribeForm
 from app.deps import fb_cli
 
-fb_router = APIRouter()
+router = APIRouter()
 FACEBOOK_GRAPH_URL = "https://graph.facebook.com"
 
 
-@fb_router.get("/facebook")
+@router.get("/facebook")
 async def verify_challenge(
     mode: str = Query(
         ..., alias="hub.mode", description="Mode is always be `subscribe`"
@@ -37,7 +37,7 @@ async def verify_challenge(
     return Response("hello")
 
 
-@fb_router.post("/facebook")
+@router.post("/facebook")
 async def webhook_event(
     data: Payload = Body(..., description="Json data from facebook")
 ):
@@ -49,7 +49,7 @@ async def webhook_event(
     return Response("ok")
 
 
-@fb_router.post("/facebook/subscribed_apps")
+@router.post("/facebook/subscribed_apps")
 async def subscribe_webhook(body: SubscribeForm, response: Response):
     """
     Subscribe your page to webhook
@@ -65,7 +65,7 @@ async def subscribe_webhook(body: SubscribeForm, response: Response):
     return resp.json()
 
 
-@fb_router.delete("/facebook/subscribed_apps")
+@router.delete("/facebook/subscribed_apps")
 async def delete_subscribe_webhook(
     page_id: str = Query(..., description="ID for facebook page"),
     access_token: str = Query(..., description="page access token"),
@@ -82,7 +82,7 @@ async def delete_subscribe_webhook(
     return resp.json()
 
 
-@fb_router.get("/facebook/subscribed_apps")
+@router.get("/facebook/subscribed_apps")
 async def list_page_subscribed_apps(
     page_id: str = Query(..., description="ID for facebook page"),
     access_token: str = Query(..., description="page access token"),
