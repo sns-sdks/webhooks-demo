@@ -59,6 +59,21 @@ async def test_subscribe_webhook():
 
 @respx.mock
 @pytest.mark.asyncio
+async def test_delete_subscribe_webhook():
+    page_id = "123456789"
+    params = {"page_id": page_id, "access_token": "token"}
+    respx.delete(f"https://graph.facebook.com/{page_id}/subscribed_apps").mock(
+        return_value=Response(status_code=200, json={"success": "true"})
+    )
+
+    async with AsyncClient(app=app, base_url="https://test") as ac:
+        resp: Response = await ac.delete("/facebook/subscribed_apps", params=params)
+        assert resp.status_code == 200
+        assert resp.json()["success"] == "true"
+
+
+@respx.mock
+@pytest.mark.asyncio
 async def test_list_page_subscribed_apps():
     page_id = "123456789"
     apps_data = {
