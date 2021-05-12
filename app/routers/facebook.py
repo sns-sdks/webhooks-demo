@@ -56,6 +56,22 @@ async def subscribe_webhook(body: SubscribeForm, response: Response):
     return resp.json()
 
 
+@fb_router.delete("/facebook/subscribed_apps")
+async def delete_subscribe_webhook(page_id: str, access_token: str, response: Response):
+    """
+    :param page_id: Id for your page
+    :param access_token: Your page access token
+    :param response: response for this api
+    :return:
+    """
+    resp = await fb_cli.delete(
+        url=f"{FACEBOOK_GRAPH_URL}/{page_id}/subscribed_apps",
+        params={"access_token": access_token},
+    )
+    response.status_code = resp.status_code
+    return resp.json()
+
+
 @fb_router.get("/facebook/subscribed_apps")
 async def list_page_subscribed_apps(
     page_id: str, access_token: str, response: Response
