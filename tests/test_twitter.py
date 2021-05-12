@@ -4,15 +4,13 @@
 
 import pytest
 import respx
-from httpx import AsyncClient, Response
-
-from app.main import app
+from httpx import Response
 
 
 @pytest.mark.asyncio
-async def test_verify_challenge():
-    async with AsyncClient(app=app, base_url="https://test") as ac:
-        resp: Response = await ac.get("/twitter", params={"crc_token": "token"})
+async def test_verify_challenge(client):
+    async with client:
+        resp: Response = await client.get("/twitter", params={"crc_token": "token"})
         assert resp.status_code == 200
         assert (
                 resp.json()["response_token"]
@@ -21,7 +19,7 @@ async def test_verify_challenge():
 
 
 @pytest.mark.asyncio
-async def test_webhook_event():
+async def test_webhook_event(client):
     tweet_delete_events = {
         "for_user_id": "930524282358325248",
         "tweet_delete_events": [
@@ -34,15 +32,15 @@ async def test_webhook_event():
             }
         ],
     }
-    async with AsyncClient(app=app, base_url="https://test") as ac:
-        resp: Response = await ac.post("/twitter", json=tweet_delete_events)
+    async with client:
+        resp: Response = await client.post("/twitter", json=tweet_delete_events)
         assert resp.status_code == 200
         assert resp.text == ""
 
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_list_webhooks():
+async def test_list_webhooks(client):
     resp_data = [
         {
             "id": "1234567890",
@@ -55,29 +53,29 @@ async def test_list_webhooks():
         return_value=Response(status_code=200, json=resp_data)
     )
 
-    async with AsyncClient(app=app, base_url="https://test") as ac:
-        resp: Response = await ac.get("/twitter/hooks")
+    async with client:
+        resp: Response = await client.get("/twitter/hooks")
         assert resp.status_code == 200
         assert resp.json()[0]["id"] == "1234567890"
 
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_trigger_challenge():
+async def test_trigger_challenge(client):
     params = {"env": "env", "webhook_id": 1}
 
     respx.put("https://api.twitter.com/1.1/account_activity/all/env/webhooks/1.json").mock(
         return_value=Response(status_code=204)
     )
 
-    async with AsyncClient(app=app, base_url="https://test") as ac:
-        resp: Response = await ac.get("/twitter/hook/challenge", params=params)
+    async with client:
+        resp: Response = await client.get("/twitter/hook/challenge", params=params)
         assert resp.status_code == 204
 
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_register_webhook():
+async def test_register_webhook(client):
     body = {"env": "env", "url": "https://example.com/webhook/twitter"}
 
     webhook_data = {
@@ -91,21 +89,21 @@ async def test_register_webhook():
         return_value=Response(status_code=200, json=webhook_data)
     )
 
-    async with AsyncClient(app=app, base_url="https://test") as ac:
-        resp: Response = await ac.post("/twitter/hook/register", json=body)
+    async with client:
+        resp: Response = await client.post("/twitter/hook/register", json=body)
         assert resp.status_code == 200
         assert resp.json()["id"] == "1234567890"
 
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_delete_webhook():
+async def test_delete_webhook(client):
     params = {"env": "env", "webhook_id": 1}
 
     respx.delete("https://api.twitter.com/1.1/account_activity/all/env/webhooks/1.json").mock(
         return_value=Response(status_code=204)
     )
 
-    async with AsyncClient(app=app, base_url="https://test") as ac:
-        resp: Response = await ac.delete("/twitter/webhook", params=params)
+    async with client:
+        resp: Response = await client.delete("/twitter/webhook", params=params)
         assert resp.status_code == 204
