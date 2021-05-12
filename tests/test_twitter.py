@@ -10,7 +10,9 @@ from httpx import Response
 @pytest.mark.asyncio
 async def test_verify_challenge(client):
     async with client:
-        resp: Response = await client.get("/webhook/twitter", params={"crc_token": "token"})
+        resp: Response = await client.get(
+            "/webhook/twitter", params={"crc_token": "token"}
+        )
         assert resp.status_code == 200
         assert (
             resp.json()["response_token"]
@@ -69,7 +71,9 @@ async def test_trigger_challenge(client):
     ).mock(return_value=Response(status_code=204))
 
     async with client:
-        resp: Response = await client.get("/webhook/twitter/webhook/challenge", params=params)
+        resp: Response = await client.get(
+            "/webhook/twitter/webhook/challenge", params=params
+        )
         assert resp.status_code == 204
 
 
