@@ -1,9 +1,0 @@
-fastapi==0.63.0
-pydantic==1.8.1
-uvicorn==0.13.4
-httpx==0.18.1
-Authlib==0.15.3
-pytest==6.2.4
-pytest-asyncio==0.15.1
-respx==0.17.0
-pre-commit==2.12.1
