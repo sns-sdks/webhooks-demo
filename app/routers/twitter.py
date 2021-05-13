@@ -6,6 +6,7 @@ import hashlib
 import hmac
 from typing import Optional
 
+from authlib.integrations.httpx_client import AsyncOAuth1Client
 from fastapi import APIRouter, Header, Query, Request, Response
 
 import config
@@ -121,3 +122,84 @@ async def delete_webhook(
     )
     response.status_code = resp.status_code
     return {}
+
+
+# Manage subscription
+@router.post("/twitter/subscriptions")
+async def subscribe_webhook(
+    env: str = Query(..., description="dev environment name"),
+    access_token: str = Query(..., description="user access token"),
+    response: Response = None,
+):
+    """
+    User subscribe app webhook.
+    """
+    with AsyncOAuth1Client(
+        client_id=config.TWITTER_CONSUMER_KEY,
+        client_secret=config.TWITTER_CONSUMER_SECRET,
+        token=access_token,
+    ) as cli:
+        resp = await cli.post(url=f"{TWITTER_BASE_URL}/all/{env}/subscriptions.json")
+        response.status_code = resp.status_code
+        return {}
+
+
+@router.get("/twitter/subscriptions")
+async def check_subscription(
+    env: str = Query(..., description="dev environment name"),
+    access_token: str = Query(..., description="user access token"),
+    response: Response = None,
+):
+    """
+    If user have subscribed webhook, return 204.
+    """
+    with AsyncOAuth1Client(
+        client_id=config.TWITTER_CONSUMER_KEY,
+        client_secret=config.TWITTER_CONSUMER_SECRET,
+        token=access_token,
+    ) as cli:
+        resp = await cli.get(url=f"{TWITTER_BASE_URL}/all/{env}/subscriptions.json")
+        response.status_code = resp.status_code
+        return {}
+
+
+@router.delete("/twitter/subscriptions")
+async def check_subscription(
+    env: str = Query(..., description="dev environment name"),
+    user_id: str = Query(..., description="ID for user to unsubscribe"),
+    response: Response = None,
+):
+    """
+    If user have subscribed webhook, return 204.
+    """
+    resp = await tw_cli.delete(
+        url=f"{TWITTER_BASE_URL}/all/{env}/subscriptions/{user_id}.json"
+    )
+    response.status_code = resp.status_code
+    return {}
+
+
+@router.get("/twitter/subscriptions/list")
+async def list_subscriptions(
+    env: str = Query(..., description="dev environment name"),
+    response: Response = None,
+):
+    """
+    Returns a list of the current All Activity type subscriptions.
+    """
+    resp = await tw_cli.get(
+        url=f"{TWITTER_BASE_URL}/all/{env}/subscriptions/list.json",
+    )
+    response.status_code = resp.status_code
+    return resp.json()
+
+
+@router.get("/twitter/subscriptions/count")
+async def subscriptions_count(response: Response):
+    """
+    Returns the count of subscriptions that are currently active on your account for all activities.
+    """
+
+    resp = await tw_cli.get(url=f"{TWITTER_BASE_URL}/all/subscriptions/count.json")
+    response.status_code = resp.status_code
+    return resp.json()
