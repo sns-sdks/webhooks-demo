@@ -24,6 +24,11 @@ class Payload(BaseModel):
     tweet_delete_events: Optional[dict] = None
 
 
-class RegisterWebhookItem(BaseModel):
+class RegisterWebhookBody(BaseModel):
     env: str = Field(..., description="dev environment name")
     url: str = Field(..., description="URL for the callback endpoint.")
+
+
+class SubscribeBody(BaseModel):
+    env: str = Field(..., description="dev environment name")
+    access_token: str = Field(..., description="user access token")

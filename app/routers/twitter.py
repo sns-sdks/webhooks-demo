@@ -7,10 +7,10 @@ import hmac
 from typing import Optional
 
 from authlib.integrations.httpx_client import AsyncOAuth1Client
-from fastapi import APIRouter, Header, Query, Request, Response
+from fastapi import APIRouter, Body, Header, Query, Request, Response
 
 import config
-from app.entities.twitter import Payload, RegisterWebhookItem
+from app.entities.twitter import Payload, RegisterWebhookBody, SubscribeBody
 from app.deps import tw_cli
 
 router = APIRouter()
@@ -96,7 +96,7 @@ async def trigger_challenge(
 
 
 @router.post("/twitter/webhook")
-async def register_webhook(body: RegisterWebhookItem, response: Response):
+async def register_webhook(body: RegisterWebhookBody, response: Response):
     """
     Register new webhook
     """
@@ -126,20 +126,18 @@ async def delete_webhook(
 
 # Manage subscription
 @router.post("/twitter/subscriptions")
-async def subscribe_webhook(
-    env: str = Query(..., description="dev environment name"),
-    access_token: str = Query(..., description="user access token"),
-    response: Response = None,
-):
+async def subscribe_webhook(body: SubscribeBody, response: Response):
     """
     User subscribe app webhook.
     """
-    with AsyncOAuth1Client(
+    async with AsyncOAuth1Client(
         client_id=config.TWITTER_CONSUMER_KEY,
         client_secret=config.TWITTER_CONSUMER_SECRET,
-        token=access_token,
+        token=body.access_token,
     ) as cli:
-        resp = await cli.post(url=f"{TWITTER_BASE_URL}/all/{env}/subscriptions.json")
+        resp = await cli.post(
+            url=f"{TWITTER_BASE_URL}/all/{body.env}/subscriptions.json"
+        )
         response.status_code = resp.status_code
         return {}
 
@@ -153,7 +151,7 @@ async def check_subscription(
     """
     If user have subscribed webhook, return 204.
     """
-    with AsyncOAuth1Client(
+    async with AsyncOAuth1Client(
         client_id=config.TWITTER_CONSUMER_KEY,
         client_secret=config.TWITTER_CONSUMER_SECRET,
         token=access_token,
@@ -164,7 +162,7 @@ async def check_subscription(
 
 
 @router.delete("/twitter/subscriptions")
-async def check_subscription(
+async def delete_subscription(
     env: str = Query(..., description="dev environment name"),
     user_id: str = Query(..., description="ID for user to unsubscribe"),
     response: Response = None,

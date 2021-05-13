@@ -111,3 +111,86 @@ async def test_delete_webhook(client):
     async with client:
         resp: Response = await client.delete("/webhook/twitter/webhook", params=params)
         assert resp.status_code == 204
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_subscribe_webhook(client):
+    body = {"env": "env", "access_token": "token"}
+
+    respx.post(
+        "https://api.twitter.com/1.1/account_activity/all/env/subscriptions.json"
+    ).mock(return_value=Response(status_code=204))
+
+    async with client:
+        resp: Response = await client.post("/webhook/twitter/subscriptions", json=body)
+        assert resp.status_code == 204
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_check_subscription(client):
+    params = {"env": "env", "access_token": "token"}
+    respx.get(
+        "https://api.twitter.com/1.1/account_activity/all/env/subscriptions.json"
+    ).mock(return_value=Response(status_code=204))
+
+    async with client:
+        resp: Response = await client.get(
+            "/webhook/twitter/subscriptions", params=params
+        )
+        assert resp.status_code == 204
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_delete_subscription(client):
+    params = {"env": "env", "user_id": "1"}
+
+    respx.delete(
+        "https://api.twitter.com/1.1/account_activity/all/env/subscriptions/1.json"
+    ).mock(return_value=Response(status_code=204))
+
+    async with client:
+        resp: Response = await client.delete(
+            "/webhook/twitter/subscriptions", params=params
+        )
+        assert resp.status_code == 204
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_list_subscriptions(client):
+    params = {"env": "env"}
+    data = {
+        "environment": "appname",
+        "application_id": "13090192",
+        "subscriptions": [{"user_id": "3001969357"}],
+    }
+    respx.get(
+        "https://api.twitter.com/1.1/account_activity/all/env/subscriptions/list.json"
+    ).mock(return_value=Response(status_code=200, json=data))
+
+    async with client:
+        resp: Response = await client.get(
+            "/webhook/twitter/subscriptions/list", params=params
+        )
+        assert resp.status_code == 200
+        assert resp.json()["environment"] == "appname"
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_subscriptions_count(client):
+    data = {
+        "account_name": "my-account",
+        "subscriptions_count": "1",
+        "provisioned_count": "25",
+    }
+    respx.get(
+        "https://api.twitter.com/1.1/account_activity/all/subscriptions/count.json"
+    ).mock(return_value=Response(status_code=200, json=data))
+    async with client:
+        resp: Response = await client.get("/webhook/twitter/subscriptions/count")
+        assert resp.status_code == 200
+        assert resp.json()["subscriptions_count"] == "1"
