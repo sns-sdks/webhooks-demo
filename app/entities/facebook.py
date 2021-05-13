@@ -25,5 +25,7 @@ class Payload(BaseModel):
 
 class SubscribeForm(BaseModel):
     page_id: str = Field(..., description="ID for facebook page")
-    fields: str = Field(..., description="Fields you want to subscribe to")
+    subscribe_fields: str = Field(
+        ..., alias="fields", description="Fields you want to subscribe to"
+    )
     access_token: str = Field(..., description="Page access token")

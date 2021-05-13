@@ -54,7 +54,9 @@ async def test_subscribe_webhook(client):
     )
 
     async with client:
-        resp: Response = await client.post("/webhook/facebook/subscribed_apps", json=body)
+        resp: Response = await client.post(
+            "/webhook/facebook/subscribed_apps", json=body
+        )
         assert resp.status_code == 200
         assert resp.json()["success"] == "true"
 
@@ -69,7 +71,9 @@ async def test_delete_subscribe_webhook(client):
     )
 
     async with client:
-        resp: Response = await client.delete("/webhook/facebook/subscribed_apps", params=params)
+        resp: Response = await client.delete(
+            "/webhook/facebook/subscribed_apps", params=params
+        )
         assert resp.status_code == 200
         assert resp.json()["success"] == "true"
 

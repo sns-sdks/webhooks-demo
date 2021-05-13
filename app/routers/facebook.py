@@ -57,7 +57,7 @@ async def subscribe_webhook(body: SubscribeForm, response: Response):
     resp = await fb_cli.post(
         url=f"{FACEBOOK_GRAPH_URL}/{body.page_id}/subscribed_apps",
         params={
-            "subscribed_fields": body.fields,
+            "subscribed_fields": body.subscribe_fields,
             "access_token": body.access_token,
         },
     )
